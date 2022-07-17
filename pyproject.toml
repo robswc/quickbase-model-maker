@@ -10,7 +10,7 @@ authors = [
 ]
 description = "A lightweight model maker for quickbase"
 readme = "README.md"
-license = { file="LICENSE" }
+#license = { file="LICENSE" }
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",

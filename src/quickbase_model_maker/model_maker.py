@@ -55,10 +55,14 @@ class QuickbaseModelMaker:
         # registrations
         self.tables = []
 
-    def sync(self):
+    def sync(self, **kwargs):
 
         # create references directory
         os.makedirs(self.references_directory, exist_ok=True)
+
+        # create __init__.py file
+        f = open(f'{self.references_directory}/__init__.py', 'w')
+        f.close()
 
         for table in self.tables:
             table.render(self.references_directory)

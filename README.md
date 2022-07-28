@@ -12,15 +12,14 @@ pip install quickbase-model-maker
 
 ### Initializing
 
-The sample code below will initialize your models for use in your application.  **Registering tables costs 1 API call per table.  You do not have to register your tables
-upon every script run.**  It is recommended that you register your tables and sync only once (or when you wish to update your models) via the python terminal.
+The sample code below will initialize your models for use in your application.  Models are created within their respective app folders, in a new directory called `references`.
 
 ```python
 # import model maker
-from quickbase_model_maker.model_maker import QuickbaseModelMaker
+from quickbase_model_maker import ModelMaker
 
 # create model maker with realm and auth info
-qmm = QuickbaseModelMaker(realm='realm', auth='AUTH-TOKEN')
+qmm = ModelMaker(realm='realm', auth='AUTH-TOKEN')
 
 # register tables you wish to create models from
 qmm.register_tables([
@@ -29,10 +28,23 @@ qmm.register_tables([
     ('bqs5abzc', 'brzanvac'),
     ('bqs5abzc', 'bqs5wers'),
 ])
+```
 
+Generate your models, based off of the registered tables, with the `.sync()` method.
+
+```python
 # call sync method to create models
-qmm.sync()
+qmm.sync(only_new_tables=True)
+```
 
+Optionally, you can sync all registered tables, regardless of whether they have already been synced.
+It is recommended to call `.sync()` 
+only when you wish to re-generate models, as **each model sync with Quickbase costs 1 API call**. You only have to generate 
+models once - or when you wish to update your models (i.e. new field you need to access added on quickbase).  Calling `.sync()` on 
+every script run **could result in a large number of API calls**.
+
+```python
+qmm.sync()
 ```
 
 ### In code
@@ -47,3 +59,10 @@ from references.orders import Order
 print(Order.ORDER_TYPE)
 print(Order.table_id())
 ```
+
+### Removing Models
+
+Models can easily be removed by doing the following:
+- Remove the model from the `references/app` directory
+- Remove the related table from the `references/__init__.py` file.
+- Remove the related table tuple from the `.register_tables()` method.

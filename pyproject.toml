@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "quickbase_model_maker_robswc"
+name = "quickbase_model_maker"
 version = "0.0.1"
 authors = [
   { name="Robert Carroll", email="robert.s.w.carroll@gmail.com" },

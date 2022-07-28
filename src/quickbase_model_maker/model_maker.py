@@ -1,3 +1,4 @@
+import logging
 import os
 
 import requests as requests
@@ -7,9 +8,19 @@ def ensure_dirs(path):
     pass
 
 
+fmt = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+logger = logging.getLogger(__name__)
+ch = logging.StreamHandler()
+ch.setFormatter(fmt)
+logger.addHandler(ch)
+logger.setLevel(logging.DEBUG)
+
+
+
 class Table:
     def __init__(self, name, table_id):
-        self.name = name.lower()
+        name = name.lower().replace(' ', '_')
+        self.name = ''.join([c if c.isalpha() else '_' for c in name])
         self.table_id = table_id
         self.fields = []
 
@@ -25,7 +36,7 @@ class Table:
             lines.append(f'\t{f[1]} = {f[0]}\n')
 
         # add get_table_id method
-        lines.append(f'\n\t@staticmethod\n\tdef get_table_id():\n\t\treturn "{self.table_id}"\n')
+        lines.append(f'\n\t@staticmethod\n\tdef table():\n\t\treturn "{self.table_id}"\n')
 
         # replace tabs with spaces
         lines = [line.replace('\t', '    ') for line in lines]
@@ -75,6 +86,7 @@ class QuickbaseModelMaker:
         Creates models from tables, given a list of tuples of (app_id, table_id)
         :param tables: list of tuples of (app_id, table_id)
         """
+        logger.info(f'Registering ({len(tables)}) tables')
         for table in tables:
             app_id = table[0]
             table_id = table[1]

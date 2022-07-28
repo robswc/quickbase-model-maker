@@ -3,7 +3,7 @@ import os
 
 import requests as requests
 
-from utils import to_file_name, as_camel_case
+from quickbase_model_maker.utils import to_file_name, as_camel_case
 
 fmt = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 logger = logging.getLogger(__name__)

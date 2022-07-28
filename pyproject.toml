@@ -18,6 +18,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+packages = [
+    { include = "quickbase_model_maker", from = "src" },
+]
+
 [project.urls]
 "Homepage" = "https://github.com/robswc/quickbase-model-maker"
 "Bug Tracker" = "https://github.com/robswc/quickbase-model-maker/issues"

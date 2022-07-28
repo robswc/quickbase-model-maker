@@ -1,3 +1,4 @@
-from model_maker import QuickbaseModelMaker
+from quickbase_model_maker.model_maker import QuickbaseModelMaker
 
 ModelMaker = QuickbaseModelMaker
+

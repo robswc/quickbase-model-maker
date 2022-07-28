@@ -1,3 +1,5 @@
+import importlib
+import json
 import logging
 import os
 
@@ -60,7 +62,7 @@ class Table:
             f = open(f'{path}/{self.app_name}/__init__.py', 'w')
             f.close()
 
-        logger.debug(f'Models for {self.name} created')
+        logger.debug(f'Created model for ---> {self.name}')
 
 
 class QuickbaseModelMaker:
@@ -81,16 +83,78 @@ class QuickbaseModelMaker:
         self.requests = s
         self.references_directory = kwargs.get('references_directory', './references')
         # registrations
+        self.registered_tables = []
         self.tables = []
 
-    def sync(self, **kwargs):
+    def sync(self, only_new_tables=False, **kwargs):
+        """
+        Syncs tables with Quickbase, creates models based off of the tables
+        :param only_new_tables: Only create models for tables that have not previously been registered
+        :param kwargs:
+        :return:
+        """
+
+        created_tables = {}
+        # try to import created tables
+        try:
+            references_import = importlib.import_module(f'references', package='references')
+            created_tables = references_import.TABLES
+        except ImportError:
+            logger.info('No references found')
+            # create __init__.py file
+            f = open(f'{self.references_directory}/__init__.py', 'w')
+            f.close()
+
+        # handle migrate
+        app_map = {}
+        for table in self.registered_tables:
+
+            # check if table is already created
+            if table[1] in created_tables.keys() and only_new_tables:
+                logger.info(f'Table "{table[1]}" already synced, skipping...')
+            else:
+                app_id = table[0]
+                table_id = table[1]
+                # if app_id not in app_map, create it
+                if app_map.get(app_id) is None:
+                    app_name_r = self.requests.get(f'https://api.quickbase.com/v1/apps/{app_id}')
+                    if app_name_r.ok:
+                        app_map.update({app_id: app_name_r.json()['name']})
+
+                # get table data
+                r = self.requests.get(f'https://api.quickbase.com/v1/tables/{table_id}?appId={app_id}')
+
+                # if table data is ok, proceed to querying fields
+                if r.ok:
+                    table_data = r.json()
+                    table_name = table_data['name']
+                    r_fids = self.requests.get(f'https://api.quickbase.com/v1/fields?tableId={table_id}')
+
+                    # if fields are ok, proceed to creating Table object
+                    if r_fids.ok:
+                        table_fields = []
+                        for field in r_fids.json():
+                            label_raw = field.get('label')
+                            label_alpha = ''.join(c for c in label_raw if c.isalpha() or c.isspace() or c.isdigit())
+                            label = label_alpha.upper().replace(' ', '_')
+                            table_fields.append((field.get('id'), label))
+
+                        # create table object, assign it fields
+                        t = Table(table_name, table_id, app_name=app_map.get(app_id), app_id=app_id)
+                        t.fields = table_fields
+                        self.tables.append(t)
+                        logger.debug(f'Synced table ---> {table_name}')
+                else:
+                    raise ConnectionError(f'Could get table {table_id}, error: {r.text}')
+                created_tables.update({table_id: {'name': table_name, 'app_id': app_id, 'app_name': app_map.get(app_id)}})
+
+        # write new created tables
+        f = open(f'{self.references_directory}/__init__.py', 'w')
+        f.write(f'TABLES = {json.dumps(created_tables, indent=4)}\n')
+        f.close()
 
         # create references directory
         os.makedirs(self.references_directory, exist_ok=True)
-
-        # create __init__.py file
-        f = open(f'{self.references_directory}/__init__.py', 'w')
-        f.close()
 
         # register tables
         logger.info(f'Creating models from ({len(self.tables)}) tables')
@@ -106,30 +170,7 @@ class QuickbaseModelMaker:
         :param tables: list of tuples of (app_id, table_id)
         """
         logger.info(f'Registering ({len(tables)}) tables')
-        app_map = {}
         for table in tables:
-            app_id = table[0]
-            table_id = table[1]
-            if app_map.get(app_id) is None:
-                app_name_r = self.requests.get(f'https://api.quickbase.com/v1/apps/{app_id}')
-                if app_name_r.ok:
-                    app_map.update({app_id: app_name_r.json()['name']})
-            r = self.requests.get(f'https://api.quickbase.com/v1/tables/{table_id}?appId={app_id}')
-            if r.ok:
-                table_data = r.json()
-                table_name = table_data['name']
-                r_fids = self.requests.get(f'https://api.quickbase.com/v1/fields?tableId={table_id}')
-                if r_fids.ok:
-                    table_fields = []
-                    for field in r_fids.json():
-                        label_raw = field.get('label')
-                        label_alpha = ''.join(c for c in label_raw if c.isalpha() or c.isspace() or c.isdigit())
-                        label = label_alpha.upper().replace(' ', '_')
-                        table_fields.append((field.get('id'), label))
-
-                    t = Table(table_name, table_id, app_name=app_map.get(app_id), app_id=app_id)
-                    t.fields = table_fields
-                    logger.debug(f'Registered table ---> {table_name}')
-                    self.tables.append(t)
-            else:
-                raise ConnectionError(f'Could get table {table_id}, error: {r.text}')
+            # will add more info to table object, eventually
+            table_data = (table[0], table[1])
+            self.registered_tables.append(table_data)

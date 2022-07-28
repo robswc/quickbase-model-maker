@@ -2,6 +2,11 @@
 
 ![model_maker_logo](https://user-images.githubusercontent.com/38849824/181615187-f4682023-e299-429a-b444-eaad335d48a9.png)
 
+## Installation
+
+```bash
+pip install quickbase-model-maker
+```
 
 ## Usage
 

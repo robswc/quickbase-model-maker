@@ -2,6 +2,31 @@
 
 ![model_maker_logo](https://user-images.githubusercontent.com/38849824/181615187-f4682023-e299-429a-b444-eaad335d48a9.png)
 
+---
+A lightweight tool for creating and managing QuickBase models!
+
+_Turn this_ 👎
+```python
+# select relevant info
+select = [3, 43, 23, 63, 21, 52, 24, 54]
+```
+
+_Into this_ 👍
+```python
+from references.order_manager import Order
+select = [
+    Order.RECORD_ID,
+    Order.ORDER_TYPE,
+    Order.ORDER_NUMBER,
+    Order.DELIVERY_DATE
+    ...
+]
+```
+
+_With just a few lines of code!_
+
+---
+
 ## Installation
 
 ```bash

@@ -86,6 +86,14 @@ class QuickbaseModelMaker:
         self.registered_tables = []
         self.tables = []
 
+        # check if references directory exists
+        if not os.path.exists(self.references_directory):
+            os.makedirs(self.references_directory)
+            # create __init__.py file in references directory
+            f = open(f'{self.references_directory}/__init__.py', 'w')
+            f.write('TABLES = {}')
+            f.close()
+
     def sync(self, only_new_tables=False, **kwargs):
         """
         Syncs tables with Quickbase, creates models based off of the tables
@@ -146,7 +154,8 @@ class QuickbaseModelMaker:
                         logger.debug(f'Synced table ---> {table_name}')
                 else:
                     raise ConnectionError(f'Could get table {table_id}, error: {r.text}')
-                created_tables.update({table_id: {'name': table_name, 'app_id': app_id, 'app_name': app_map.get(app_id)}})
+                created_tables.update(
+                    {table_id: {'name': table_name, 'app_id': app_id, 'app_name': app_map.get(app_id)}})
 
         # write new created tables
         f = open(f'{self.references_directory}/__init__.py', 'w')
